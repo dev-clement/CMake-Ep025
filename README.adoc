@@ -1,0 +1,149 @@
+# CMake - Generating documentation
+In this article we'll look at how we can make use of Doxygen in our CMake project and how Doxygen is used in CMake.
+
+:toc:
+:sectnums:
+
+== Doxygen overview
+Doxygen provides cross-referencing capabilities, allowing users to navigate between different parts of the documentation.
+
+Doxygen generates hyperlink to related elements, making it easy to explore the codebase and understand the relationships between differents component.
+
+=== Doxygen definition
+Foxygen is a widely-used documentation generator tool in software development. It automates the generation of documentation from source code comments, parsing information about classes, functions, and variables to produces output in format like HTML as well as PDF. By simplifying and standardizing the documentation process, Doxygen enhances collaboration and maintenance across diverse programming languages and project scales.
+
+=== Doxygen multiple output format
+Doxgen can generate documentation in various output formats such as HTML, PDF (through LaTeX), Word (via RTF), and XML.
+
+This flexibility allows developpers to choose the format that best suits their needs or integrate the documentation into different systems.
+
+=== Markdown
+Markdown support in Doxygen allows you to combine the simplicity of Markdown with the powerful features of Doxygen for documenting code.
+
+Next to Markdown, Doxygen supports many comments like `\param`, `\return`, `\brief`, and so on... To provide additional information about functions, parameters, and return values.
+
+=== Doxygen for C++
+Doxygen provides robust support for documentiing C++ code, recognizing the inttricacies of the language and generating comprehensive documentation.
+
+Next to C++, Doxygen also supports, C, Python, PHP, Java, C#, Objective-C, Fortran, VHDL, Splice, IDL and Lex.
+
+== Generating documentation
+In our case, we want to make use of Doxygen in order to generate documentation related to the code we are writting using `CMake` and its features to include Doxygen and run it when need it.
+
+=== Using doxygen
+The first thing to do with doxygen to generate documentation related to the development you are in is a configuration file. That can be done through the following command:
+```cmake
+doxygen -g <config_file>
+```
+Where `<config_file>` is the name of the configuration file. If you omit the file name, a file named Doxyfile will be created. If a file with the name `<config_file>` already exists, doxygen rename it to `<config_file>.back` before generating the configuration template.
+
+If you use `-` (i.e. the minus sign) as the file name, then doxygen will try to read the configuration file from standard input, which can be useful for scripting.
+
+=== Doxygen executable
+The executable doxygen is the main program that parses the sources and generates the documentation. Optionally, the executable doxywizard can be used, which is a graphical front-end for editing the configuration files that is used by Doxygen and for running Doxygen in a graphical environment. For macOS Doxywizard will be started by clicking on the Doxygen application icon.
+
+image::doxygen_workflow.png[]
+
+==== Step0: Check if Doxygen supports your programming / Hardware descriptions
+
+First, assure that your programming/hardware description language has a reasonnable chance of being recognized by Doxygen. These programming languages are supported by default: C, C++, Lex, C#, Objective-C, IDL, Java, PHP, Python, Fortran and D. Doxygen also supports the hardware description language VHDL by default. It is possible to configure certain file type extensions to use certain parsers: Also, completely, different languages can be supported by using preprocessor programs.
+
+==== Step1: Creating a configuration file
+Doxygen uses a configuration file to determine all of its settings. Each project should get its own configuration file. A project can consist of a single source file, but can also be an entire source tree that is recursively scanned.
+
+To simplify the creation of a configuration file, Doxygen can create a template configuration file for you. To do this call Doxygen from the command line with the `-g` option:
+
+```doxygen
+doxygen -g <config_file>
+```
+
+Where `<config_file>` is the name of the configuration file. If you omit the file name, a file named Doxyfile will be created. If a file with the name `<config_file>` already exists, Doxygen will rename it to `<config_file>.bak` before generating the configuration template. If you use - (i.e. the minus sign) as the file name, then Doxygen will try to read the configuration file from the standard input (stdin), which can be useful for scripting purposes.
+
+The configuration file has a format that is similar to that of a (simple) Makefile. It consts of a number of assignments (tags) of the form:
+```Makefile
+TAGNAME = VALUE or
+TAGNAME = VALUE1 VALUE2 ...
+```
+You can probably leave the values of most tags in a generated template configuration file to their default value.
+
+If you do not wish to edit the configuration file with a text editor, you should have a look at Doxiwizard, which is a GUI front-end that can create, read and write Doxygen configuration files, and allows setting configuration options by entering them via dialogs.
+
+* For a small project consisting of a few C and/or C++ source and header file, you can have `INPUT` tag empty and Doxygen will search for sources in the current directory.
+
+* In case of you having a larger project that consists of a source directory or tree, you should assign the root directory or directories to the `INPUT` tag, and add one or more file patterns to the `FILE_PATTERNS` tag (for instance `*.cpp` `*.hpp`). Only files that match one of the patterns will be parsed (if the patterns are omitted a list of typical patterns is used for the types of files Doxygen supports). 
+* For recursive parsing of a source tree you must set `RECURSIVE` tag to `YES`. To further fine-time the list of files that is parsed the `EXCLUDE` and `EXCLUDE_PATTERNS` tags can be used. To omit all tests directories fril a siyrce tree for instance, one could use: `EXCLUDE_PATTERNS = \*/test/*
+
+NOTE: Doxygen looks at the file's extension to determine how to parse a file, however in our case, only C, C++ / H, HPP, HH are taken into account
+
+NOTE: Any extension that isn't parsed can be set by adding it to `FILE_PARAMETER` and when the appropriate `EXTENSION_MAPPING` is set
+
+If you start using Doxygen for an existing project (thus without any documentation that Doxygen is aware of), you can still get an idea of what the structure is and how the documented result would look like. To do son you must set the `EXTRACT_ALL` tag in the configuration file to `YES`. Then, Doxygen will pretend everything in your sources is documented. Please note that as a consequence warnings about undocumented members will ot be generated as long as `EXTRACT_ALL` is set to `YES`.
+
+To analyze an existing piecce of software it is useful to cross-reference a (documented) entity with its definition in the sources files. Doxygen will generate such cross-references if you set the `SOURCE_BROWSERS` tag to `YES`. It can also include the source directly into the documentation by settings `INLINE_SOURCES` to `YES` (this can be handy for code reviews for instance)
+
+==== Step2: Running Doxygen
+To generate the documentaiton you can now enter the following command in CLI:
+```bash
+$ doxygen <config_file>
+```
+Depending on your settings, Dexygen will create `html`, `rtf`, `latex`, `xml`, `man` and/or docbook directories inside the output directory. As the names suggest these directories contain the generated documentation in HTML, RTF, LATEX, XML, Unix-Man page, and DocBook format.
+
+The default output directory is the directory in which doxygen is started. The root directory to which the output is written can be changed using the `OUTPUT_DIRECTORY`. The format specific directory within the output directory can be selected using the `HTML_OUTPUT`, `RTF_OUTPUT`, `LATEX_OUTPUT`, `XML_OUTPUT`, `MAN_OUTPUT` and `DOCBOOK_OUTPUT`. Tags of the configuration file. If the output firectory does not exists, doxygen will try to create it for you (but it sill not try to create a whole path recursively, like `mkdir -p` does).
+
+===== HTML output
+The generated HTML documentation can be viewed by pointing a HTML browser to the `index.html` file in the html directory. For the best results a browser that supports cascading style-sheet (CSS) should be used (I'm using Mozilla Firefox, Google Chrome, Safari, and sometimes IE8, IE9, and Opera to test the generated output).
+
+Some of the features the HTML section (such as `GENERATE_TREEVIEW` or the search engine) require a browser that supports Dynamic HTML and JavaScript enabled.
+
+===== LaTeX output
+The generated LaTeX documentation must first be compile by a LaTeX compiler (I use a recent teTeX distribution for Linux and macOS ad MikTex for Windows). To simplify the process of compiling the generated documentation, doxygen writes a Makefile into the latex directory (On a Windows platform also a make.bat batch file is generated).
+
+The contents and targets in the Makefile depend on the setting of `USE_PDFLATES`. If it is disabled (set to `NO`), then typing make in the latex directory a dvi file called refman.dvi will be generated. This file can then be viewed using xdvi or converted into a PostScript file refman.ps by typing `make ps` (this requires dvips).
+
+To put 2 pages on one physical page use make ps_2on1 instead. The resulting PostScript file can send ato a PostScript printer. If you do not have a PostScript printer, you can try to use ghostscript to convert PostScript into something your printer understands.
+
+Conversion to PDF is also possible if you have installed the ghostscript interpreter; just type `make pdf` or `make pdf_2on1`.
+
+To get the best results for PDF output, you should set the `PDF_HYPERLINKS` and `USE_PDFLATEX` tags to `YES`. In this case the Makefile will only contain a target to build `refman.pdf` directly.
+
+===== RTF output
+Doxygen combines the RTF output to a single file called `refman.rtf`. This file is optimized for importing into the `Microsoft Word`. Certain information is encoded using so called fields. To show the actual value you need to select all (Edit - select all) and then toggle fields (right click and select the option from the drop down menu).
+
+===== XML output
+The XML output sonsists of a structured "dump" of the information gathered by Doxygen. Each compound (class/namespace/file/...) has its own XML file and there is also an index file called `index.html`.
+
+A file called combine.xslt XSLT script also generated and can be used to combine all XML files into a single file.
+
+Doxygen also generates two XML schema files `ìndex.xsd` (being the index file) and `compound.xsd` (being compound files). This schema file describes the possible elements, their attributes and how they are structured, i.e. It describes the grammar of the `XML` files and can be used for validation or to steer `XSLT` scripts.
+
+In the addon/doxmlparser directory you can find a parser library for reading the XML output produced by Doxygen in an incremental way (see addon/doxmlparser/doxmparser/index.py and addon/doxmlparser/doxmlparser/dompound.py for the interface of the library.
+
+===== Man page output
+The generated man pages can be viewed using the man program. You do need to make sure the man directory is in the man path (see the MANPATH environment variabe). Note that there are some limitations to the capabilities of the man page format, so one information (like class diagrams, cross references and formulas) will be lost.
+
+===== DocBook output
+Doxygen can also generate output in the DocBook format. How to process the DocBook output is beyond the scope of this manual.
+
+==== Step3: Documnting the sources
+Although documenting the source is prese,ted as step3, in a new project this should of course be step1. Here I assume you already have some code and you want Doxygen to generate a nice document describing the API and maybe the internals and some related design documentation as well.
+
+If the `EXTRACT_ALL` option is set to `NO` in the configuration file (the default), then Doxygen will only generate documentation from _documented_ entities. So how do you document these ? For members, classes and namespaces there are bascally two options:
+
+. Place a special documentation block in front of the declaration or definition of the member, class or namespace. For file, class and namespace members, it is also allowed to place the documentation directly after the member.
+. Place a specifal documentation block somewhere else (another file or another location) and put a _structural_ command in the documentation block. A structural command links a documentation block to a certain entity that can be documented (e.g. a member class, namespaces or file).
+
+The advantage of the first option is that you do not have to repeat the name of the entity.
+
+Files can only be documented using the second option, since there is no way to put a socumentation block before a file. Of course, file members (functions, variables, typedefs, defines, ...) do not need an explicict structurall command; just putting a special documentation block in from or behind them will work fine.
+
+The text inside a special documentation block is parsed before it is written to the HTML and/or LaTeX output files. 
+
+During parsing the following steps take place:
+
+* Markdown formatting is replaced by corresponding HTML or special commands
+* The special commands inside the documentation are executed.
+* If a line starts with some whitespaces followed by one or more asterisks (*) and then optionally more whotespace, then all whitespace and asterisks are removed
+* All resulting blank lines are treated as a paragraph separators. This saves you from placing new-paragraph commands yourself in order to make the generated documentation readable.
+* Links are created fr words corresponding to documented classes (unless the word is preceded by a `%`, then the word will not be linked and the `%` sign is removed.
+* Links to members are created when certain patterns are found in the text.
+* HTML tags that are in the documentation are interpreted and converted to LaTeX equivalents for the LaTeX output.
